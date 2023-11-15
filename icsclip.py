@@ -1,4 +1,5 @@
 import argparse
+import os
 from icalendar import Calendar
 from datetime import datetime, timedelta, timezone, date
 from dateutil.rrule import rrulestr
@@ -68,8 +69,11 @@ for component in cal.walk():
 for event in events_to_remove:
     cal.subcomponents.remove(event)
 
-# Save the updated calendar to a new .ics file
-new_calendar_file = 'updated_' + calendar_file
+# Save the updated calendar to a new file in the same directory as the original file
+dir_name, file_name = os.path.split(calendar_file)
+new_file_name = 'updated_' + file_name
+new_calendar_file = os.path.join(dir_name, new_file_name)
+
 with open(new_calendar_file, 'wb') as file:
     file.write(cal.to_ical())
 
