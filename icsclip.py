@@ -1,11 +1,20 @@
+import argparse
 from icalendar import Calendar
 from datetime import datetime, timedelta, timezone, date
 from dateutil.rrule import rrulestr
 from dateutil.relativedelta import relativedelta
 import pytz
 
+# Setup argument parser
+parser = argparse.ArgumentParser(description='ICS Clip: Streamline .ics calendar files.')
+parser.add_argument('calendar_file', help='Path to the .ics calendar file')
+
+# Parse arguments
+args = parser.parse_args()
+calendar_file = args.calendar_file
+
 # Load the .ics file
-with open('Calendar.ics', 'rb') as file:
+with open(calendar_file, 'rb') as file:
     cal = Calendar.from_ical(file.read())
 
 # Get the current date and the start of the current week in UTC
@@ -60,5 +69,8 @@ for event in events_to_remove:
     cal.subcomponents.remove(event)
 
 # Save the updated calendar to a new .ics file
-with open('updated_calendar.ics', 'wb') as file:
+new_calendar_file = 'updated_' + calendar_file
+with open(new_calendar_file, 'wb') as file:
     file.write(cal.to_ical())
+
+print(f"Updated calendar saved to {new_calendar_file}")
