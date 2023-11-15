@@ -1,7 +1,7 @@
 # ICS Clip
 
 ## Description
-ICS Clip is a Python script designed to streamline calendar files (.ics) by removing events prior to the current week while preserving current, future and recurring events. This can significantly reduce the size of large calendar files, making them more manageable and easier to import into calendar applications like Google Calendar.
+ICS Clip is a Python script designed to streamline calendar files (.ics) by removing events prior to the current week while preserving current, future and recurring events from the file. This can significantly reduce the size of large calendar files, making them more manageable and easier to import into calendar applications like Google Calendar.
 
 ## Installation
 To run ICS Clip, you'll need Python installed on your system along with a few external libraries. You can install the required libraries using pip:
