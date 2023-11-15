@@ -1,4 +1,4 @@
-from icalendar import Calendar, Event
+from icalendar import Calendar
 from datetime import datetime, timedelta, timezone, date
 from dateutil.rrule import rrulestr
 from dateutil.relativedelta import relativedelta
