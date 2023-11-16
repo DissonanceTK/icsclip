@@ -13,7 +13,7 @@ pip install icalendar pytz python-dateutil
 To use ICS Clip, place your .ics file in the same directory as the script or provide the path to the file. Run the script with Python:
 
 ```bash
-python icsclip.py
+python icsclip.py [-h] calendar_file
 ```
 
 The script will create a new .ics file with the filtered events.
