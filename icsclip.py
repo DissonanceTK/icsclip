@@ -181,6 +181,15 @@ def moved_occurrence(series, single_start, overridden):
     return occurrence
 
 
+def same_form_as_dtstart(series, moment):
+    """`moment` written the way the series' DTSTART is (same time zone, or all-day date), since
+    an EXDATE in a different form than DTSTART makes Google Calendar ignore the whole import."""
+    dtstart = series['DTSTART'].dt
+    if not isinstance(dtstart, datetime):
+        return moment.date()
+    return moment.astimezone(dtstart.tzinfo) if dtstart.tzinfo else moment.replace(tzinfo=None)
+
+
 def truncate_series(ev, at):
     """End a recurring series just before `at` (an aware datetime)."""
     rule = as_list(ev['RRULE'])[0]
@@ -449,7 +458,7 @@ def main():
                 continue
             occurrence = moved_occurrence(series, event_times(single)[0], overridden)
             if occurrence:
-                series.add('EXDATE', occurrence.astimezone(timezone.utc))
+                series.add('EXDATE', same_form_as_dtstart(series, occurrence))
                 moved_notes.append(f"{str(series.get('SUMMARY'))[:60]!r}: skipped {occurrence.date()}, "
                                    f"moved to {event_times(single)[0].date()}")
 
