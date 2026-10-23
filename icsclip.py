@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 from dateutil.rrule import rrulestr
 import re
+from difflib import SequenceMatcher
 
 from icalendar import Calendar, Event, vDatetime, vText
 
@@ -133,6 +134,27 @@ def series_key(ev):
         return None
     title = ' '.join(str(ev.get('SUMMARY') or '').lower().split())
     return (title, start.weekday(), start.hour, start.minute)
+
+
+TITLE_SIMILARITY = 0.85
+
+
+def same_meeting(a, b):
+    """Do two recurring series look like versions of one meeting? Same weekday and local start
+    time, and either the same title or, from the same organizer, a nearly identical one (an
+    organizer who renames a meeting when re-issuing it)."""
+    start_a, start_b = event_times(a)[0], event_times(b)[0]
+    if start_a is None or start_b is None:
+        return False
+    if (start_a.weekday(), start_a.hour, start_a.minute) != (start_b.weekday(), start_b.hour, start_b.minute):
+        return False
+    title_a, title_b = norm_title(a), norm_title(b)
+    if title_a == title_b:
+        return True
+    organizer_a = norm_email(' '.join(str(o) for o in as_list(a.get('ORGANIZER'))))
+    organizer_b = norm_email(' '.join(str(o) for o in as_list(b.get('ORGANIZER'))))
+    return bool(organizer_a) and organizer_a == organizer_b \
+        and SequenceMatcher(None, title_a, title_b).ratio() >= TITLE_SIMILARITY
 
 
 def norm_title(ev):
@@ -376,14 +398,18 @@ def main():
             drop(ev, 'declined')
 
     # 2) A series re-issued by the organizer leaves the old one running; end the old one
-    #    where the newer same-title/weekday/time series begins
+    #    where the newer same-meeting series begins
     cut_at = {}  # UID -> when its series was cut short
-    groups = {}
-    for ev in masters:
-        key = series_key(ev)
-        if key:
-            groups.setdefault(key, []).append(ev)
-    for group in groups.values():
+    groups = []  # clusters of series that are versions of the same meeting
+    for ev in sorted((e for e in masters if 'RRULE' in e and event_times(e)[0] is not None),
+                     key=lambda e: event_times(e)[0]):
+        for group in groups:
+            if any(same_meeting(ev, member) for member in group):
+                group.append(ev)
+                break
+        else:
+            groups.append([ev])
+    for group in groups:
         group.sort(key=lambda e: event_times(e)[0])
         for older, newer in zip(group, group[1:]):
             newer_start = event_times(newer)[0]
